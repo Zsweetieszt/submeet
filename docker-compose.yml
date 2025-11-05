@@ -1,0 +1,61 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Docker/prod.Dockerfile
+    container_name: submeet-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    working_dir: /var/www
+    depends_on:
+      - db
+    networks:
+      submeet-network:
+        ipv4_address: 172.19.0.2
+
+  db:
+    image: postgres:latest
+    container_name: submeet-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./postgre/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      submeet-network:
+        ipv4_address: 172.19.0.3
+
+  server:
+    build:
+      context: .
+      dockerfile: Docker/server.Dockerfile
+    container_name: submeet-server
+    restart: unless-stopped
+    depends_on:
+      - app
+    networks:
+      submeet-network:
+        ipv4_address: 172.19.0.4
+
+  cache:
+    image: redis:alpine
+    container_name: submeet-cache
+    restart: unless-stopped
+    networks:
+      submeet-network:
+        ipv4_address: 172.19.0.5
+
+networks:
+  submeet-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/24
+
+volumes:
+  db-data:
