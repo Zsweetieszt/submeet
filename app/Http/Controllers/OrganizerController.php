@@ -19,6 +19,8 @@ use App\Models\TopicUser;
 use PhpOffice\PhpWord\TemplateProcessor;
 use App\Services\EmailService;
 use NcJoes\OfficeConverter\OfficeConverter;
+use App\Models\UserLogs; 
+use Illuminate\Support\Facades\Log;
 
 class OrganizerController extends Controller
 {
@@ -426,6 +428,24 @@ class OrganizerController extends Controller
             $payment->update(['status' => $payment->status === 'Pending' ? 'Paid' : 'Unpaid']);
             $payment->refresh();
 
+            if ($payment->status === 'Paid' && $oldStatus === 'Pending') {
+                try {
+                    $organizerUser = Auth::user(); // Ini adalah organizer yang menekan tombol konfirmasi
+                    if ($organizerUser) {
+                        UserLogs::create([
+                            'user_id' => $organizerUser->user_id,
+                            'ip_address' => $request->getClientIp(),
+                            'user_log_type' => 'Payment Confirmation', // <-- Nilai ENUM
+                            'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
+                            'created_at' => now(),
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    // Catat error jika logging gagal, tapi jangan hentikan proses utama
+                    Log::error('Gagal mencatat log Payment Confirmation: ' . $e->getMessage());
+                }
+            }
+
             if ($payment->first_paper_sub_id) {
                 if ($payment->status === 'Paid') {
                     try {
@@ -465,6 +485,8 @@ class OrganizerController extends Controller
                     }
                 }
             }
+
+            //opsi log
 
             return back()->with('success', 'Payment Status updated successfully.');
             // return redirect()->back()->with('success', 'Payment Status updated successfully.');

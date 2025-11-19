@@ -11,6 +11,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use App\Models\UserLogs; 
+use Illuminate\Support\Facades\Log; 
 
 class AuthController extends Controller
 {
@@ -189,6 +191,19 @@ class AuthController extends Controller
                 'message' => 'User created successfully',
                 'data' => $user,
             ]);
+
+            try {
+                UserLogs::create([
+                    'user_id' => $user->user_id,
+                    'ip_address' => $request->getClientIp(),
+                    'user_log_type' => 'Register',
+                    'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
+                    'created_at' => now(),
+                ]);
+            } catch (\Exception $e) {
+                // Catat error jika logging gagal, tapi jangan hentikan proses utama
+                Log::error('Gagal mencatat log Register: ' . $e->getMessage());
+            }
 
             return back()->with('success', 'Your account created successfully, please email for activation.');
 

@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Services\EmailService;
+use App\Models\UserLogs;
+use Illuminate\Support\Facades\Log;
 
 class ReviewerController extends Controller
 {
@@ -172,7 +174,7 @@ class ReviewerController extends Controller
     }
 
     public function submit_review(Request $request, $event, $paper_id)
-    {
+    {   
         try {
             $eventObj = Event::where('event_code', $event)->firstOrFail();
             $paper = Paper::with(['decisions'])->where('paper_sub_id', $paper_id)->firstOrFail();
@@ -269,6 +271,22 @@ class ReviewerController extends Controller
                 } catch (\Exception $e) {
                     \Log::error("Gagal mengirim email ke editor ID {$editor->user_id}: " . str_replace(["\r", "\n"], ' ', $e->getMessage()));
                 }
+            }
+
+            try {
+            $user = Auth::user(); // Mendapatkan reviewer yang sedang login
+            if ($user) {
+                UserLogs::create([
+                    'user_id' => $user->user_id,
+                    'ip_address' => $request->getClientIp(),
+                    'user_log_type' => 'Submit Review', // <-- Nilai ENUM baru
+                    'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
+                    'created_at' => now(),
+                ]);
+            }
+            } catch (\Exception $e) {
+                // Catat error jika logging gagal, tapi jangan hentikan proses utama
+                Log::error('Gagal mencatat log Submit Review: ' . $e->getMessage());
             }
 
             return redirect()->route('events.reviewer', [$event])->with('success', 'Review submitted successfully.');

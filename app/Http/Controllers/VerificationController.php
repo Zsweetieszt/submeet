@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Models\UserLogs;
+use Illuminate\Support\Facades\Log;
 
 class VerificationController extends Controller
 {
@@ -37,6 +39,22 @@ class VerificationController extends Controller
         $user->save();
 
         Auth::login($user);
+
+        try {
+            // $user sudah didefinisikan di atas
+            if ($user) {
+                UserLogs::create([
+                    'user_id' => $user->user_id,
+                    'ip_address' => $request->getClientIp(),
+                    'user_log_type' => 'Account Activation', // <-- Nilai ENUM baru
+                    'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
+                    'created_at' => now(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Catat error jika logging gagal, tapi jangan hentikan proses utama
+            Log::error('Gagal mencatat log Account Activation: ' . $e->getMessage());
+        }
 
         return redirect('/dashboard');
     }

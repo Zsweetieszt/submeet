@@ -9,6 +9,9 @@ use App\Models\Author;
 use App\Models\SupportingMaterial;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use App\Models\UserLogs;             
+use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Log;  
 
 
 class SupportingMaterialsController extends Controller
@@ -144,10 +147,26 @@ class SupportingMaterialsController extends Controller
             ->where('paper_sub_id', $request->first_paper_sub_id)
             ->first();
 
+            try {
+                $user = Auth::user(); // Mendapatkan pengguna yang sedang login
+                if ($user) {
+                    UserLogs::create([
+                        'user_id' => $user->user_id,
+                        'ip_address' => $request->getClientIp(),
+                        'user_log_type' => 'Submit Supporting Materials', // <-- Nilai ENUM baru
+                        'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
+                        'created_at' => now(),
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Catat error jika logging gagal, tapi jangan hentikan proses utama
+                Log::error('Gagal mencatat log Submit Supporting Materials: ' . $e->getMessage());
+            }
+
             return redirect()->route('index.supporting-materials', $event->event_code)
             ->with('success', 'Suppporting materials uploaded successfully.');
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors('Failed to upload supporting materials : ' . str_replace(["\r", "\n"], ' ', $e->getMessage()));
+            return redirect()->back()->withErrors('Failed to Submit Supporting Materialss : ' . str_replace(["\r", "\n"], ' ', $e->getMessage()));
         }
     }
 }
