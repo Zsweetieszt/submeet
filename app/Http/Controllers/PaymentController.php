@@ -12,9 +12,6 @@ use App\Models\PaymentSettings;
 use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
-use App\Models\UserLogs; 
-use Illuminate\Support\Facades\Auth; 
-use Illuminate\Support\Facades\Log;  
 
 class PaymentController extends Controller
 {
@@ -252,21 +249,6 @@ class PaymentController extends Controller
                     $payment->payment->status = 'Pending';
                     $payment->payment->save();
 
-                    try {
-                        $user = Auth::user();
-                        if ($user) {
-                            UserLogs::create([
-                                'user_id' => $user->user_id,
-                                'ip_address' => $request->getClientIp(),
-                                'user_log_type' => 'Upload Payment Proof', // <-- Nilai ENUM
-                                'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
-                                'created_at' => now(),
-                            ]);
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Gagal mencatat log Upload Payment Proof: ' . $e->getMessage());
-                    }
-
                 } catch (\Exception $e) {
                     // Delete uploaded file if payment save fails
                     if ($filePath && \Storage::disk('public')->exists($filePath)) {
@@ -342,21 +324,6 @@ class PaymentController extends Controller
                             'is_offline' => ($request->country_of_nationality == $event->country_id) ? true : (($request->attendance == "1") ? true : false),
                         ]
                     );
-
-                    try {
-                        $user = Auth::user();
-                        if ($user) {
-                            UserLogs::create([
-                                'user_id' => $user->user_id,
-                                'ip_address' => $request->getClientIp(),
-                                'user_log_type' => 'Request Payment', // <-- Nilai ENUM
-                                'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
-                                'created_at' => now(),
-                            ]);
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Gagal mencatat log Request Payment: ' . $e->getMessage());
-                    }
 
                     $existingPaymentHistory = PaymentHistory::where('payment_id', $payment->payment_id)
                         ->where('expired_date', '>', now())

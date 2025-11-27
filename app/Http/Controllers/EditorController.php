@@ -14,12 +14,10 @@ use App\Models\User;
 use App\Models\UserEvent;
 use DB;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\TopicUser;
 use App\Services\EmailService;
 use NcJoes\OfficeConverter\OfficeConverter;
 use PhpOffice\PhpWord\TemplateProcessor;
-use App\Models\UserLogs;
 
 class EditorController extends Controller
 {
@@ -127,22 +125,6 @@ class EditorController extends Controller
                     } catch (\Exception $e) {
                         \Log::error("Gagal kirim email ke reviewer ID {$reviewerId}: " . $e->getMessage());
                     }
-                }
-
-                    try {
-                    $user = Auth::user(); // Mendapatkan editor yang sedang login
-                    if ($user) {
-                        UserLogs::create([
-                            'user_id' => $user->user_id,
-                            'ip_address' => $request->getClientIp(),
-                            'user_log_type' => 'Assign Reviewer',
-                            'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
-                            'created_at' => now(), // Sesuai dengan middleware LogUserAgent
-                        ]);
-                    }
-                } catch (\Exception $e) {
-                    // Catat error jika logging gagal, tapi jangan hentikan proses utama
-                    Log::error('Gagal mencatat log Assign Reviewer: ' . $e->getMessage());
                 }
 
                 return redirect()

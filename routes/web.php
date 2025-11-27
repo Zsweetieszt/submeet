@@ -19,6 +19,7 @@ use App\Http\Controllers\ReviewerController;
 use App\Http\Controllers\SupportingMaterialsController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\OrganizerController;
+use App\Http\Controllers\SubscriptionController;
 
 // Auth::routes(['verify' => true]);
 
@@ -39,6 +40,27 @@ Route::middleware(['auth', EnsureEmailIsVerified::class])->group(function () {
         Route::get('dashboard', 'index')->name('dashboard');
         Route::get('dashboard/event/{event}', 'event')->name('dashboard.event')->middleware(JoinedEvent::class);
         Route::post('dashboard/event/{event}/change-role', 'change_role')->name('dashboard.event.change-role')->middleware(JoinedEvent::class);
+    });
+
+    //  Route::controller(SubscriptionController::class)->group(function () {
+    //     Route::get('subscription', 'plans_index')->name('subscription');
+    //     Route::get('subscription/history', 'history_index')->name('subscription.history');
+    //     Route::get('subscription/payments', 'payments_index')->name('subscription.payments');
+    // });
+
+    Route::controller(SubscriptionController::class)->group(function () {
+      
+        Route::get('subscription/plans', 'plans_index')->name('subscription');
+        
+         Route::get('subscription/preview/{plan_id}', 'preview')->name('subscription.preview'); // Halaman Preview Paket
+      
+        Route::post('subscription/purchase', 'purchase')->name('subscription.purchase'); // Proses Beli
+        
+        Route::get('subscription/history', 'payments_index')->name('subscription.history'); // List Riwayat
+        Route::get('subscription/payment/{id}', 'payment_show')->name('subscription.payment.show'); // Halaman Invoice
+        Route::post('subscription/payment/{id}/upload', 'upload_proof')->name('subscription.payment.upload'); // Upload Bukti
+        
+        Route::get('subscription/payments', 'payments_index')->name('subscription.payments');
     });
 
     Route::get('/', function () {

@@ -15,8 +15,6 @@ use App\Models\Event;
 use App\Models\Topic;
 use App\Models\TopicPaper;
 use App\Models\User;
-use App\Models\UserLogs;
-use Illuminate\Support\Facades\Log;
 
 class EventController extends Controller
 {
@@ -639,19 +637,6 @@ class EventController extends Controller
                 'role_id' => $role_id,
                 'is_offline' => $request->is_offline ?? $is_offline,
             ]);
-
-            try {
-                UserLogs::create([
-                    'user_id' => $user->user_id,
-                    'ip_address' => $request->getClientIp(),
-                    'user_log_type' => 'Join Event', // <-- Nilai ENUM baru
-                    'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
-                    'created_at' => now(),
-                ]);
-            } catch (\Exception $e) {
-                // Catat error jika logging gagal, tapi jangan hentikan proses utama
-                Log::error('Gagal mencatat log Join Event: ' . $e->getMessage());
-            }
 
             return redirect()->route('events', $event_code)->with('success', 'Successfully joined the event!');
         } catch (\Exception $e) {

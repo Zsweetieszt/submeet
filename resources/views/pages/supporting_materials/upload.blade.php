@@ -14,7 +14,7 @@
             href="{{ route('index.supporting-materials', request()->route('event')) }}">Supporting Materials
             Paper</a>
     </li>
-    <li class="breadcrumb-item active"><span>Submit Supporting Materialss</span>
+    <li class="breadcrumb-item active"><span>Upload Supporting Materials</span>
     </li>
 @endsection
 

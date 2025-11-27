@@ -7,7 +7,6 @@ use App\Models\Topic;
 use App\Models\TopicUser;
 use App\Models\User;
 use App\Models\UserEvent;
-use App\Models\UserLogs;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;

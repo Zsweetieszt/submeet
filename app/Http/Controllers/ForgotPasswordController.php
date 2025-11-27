@@ -8,7 +8,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use App\Models\UserLogs;
 
 class ForgotPasswordController extends Controller
 {
@@ -38,28 +37,7 @@ class ForgotPasswordController extends Controller
             'email' => $user->email
         ]);
 
-        // ==========================================================
-        // >>> LOGIKA LOGGING BARU UNTUK FORGOT PASSWORD REQUEST 05/11/2025 <<<
-        // ==========================================================
-        if ($status === Password::RESET_LINK_SENT) {
-            try {
-                UserLogs::create([
-                    'user_id' => $user->user_id,
-                    'ip_address' => $request->getClientIp(),
-                    'user_log_type' => 'Forgot Password Request',
-                    'user_agent' => json_encode($request->header('User-Agent')), 
-                    'created_at' => now(),
-                ]);
-            } catch (\Exception $e) {
-                // Log the database error without disrupting the user flow
-                \Log::error("Failed to log Forgot Password event for user ID {$user->user_id}: " . $e->getMessage());
-            }
-        }
-        // ==========================================================
-        // >>> AKHIR LOGIKA LOGGING BARU <<<
-        // ==========================================================
-
-        return $status === Password::RESET_LINK_SENT
+        return $status === Password::ResetLinkSent
             ? back()->with(['status' => __($status)])
             : back()->withErrors([
                 'email' => __($status),
@@ -97,35 +75,16 @@ class ForgotPasswordController extends Controller
                         'memory' => 1024,
                         'time' => 2,
                         'threads' => 2,
-                        'rounds' => 10,
                     ])
                 ])->setRememberToken(Str::random(60));
 
                 $user->save();
-                
-                // ==========================================================
-                // >>> LOGIKA LOGGING BARU UNTUK PASSWORD RESET SUKSES 05/11/2025 <<<
-                // ==========================================================
-                try {
-                    UserLogs::create([
-                        'user_id' => $user->user_id,
-                        'ip_address' => request()->getClientIp(),
-                        'user_log_type' => 'Password Reset Success', 
-                        'user_agent' => json_encode(request()->header('User-Agent')),
-                        'created_at' => now(),
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::error("Failed to log Password Reset event for user ID {$user->user_id}: " . $e->getMessage());
-                }
-                // ==========================================================
-                // >>> AKHIR LOGIKA LOGGING BARU <<<
-                // ==========================================================
-                
+
                 event(new PasswordReset($user));
             }
         );
 
-        return $status === Password::PASSWORD_RESET
+        return $status === Password::PasswordReset
             ? redirect()->route('login')->with('status', __($status))
             : back()->withErrors(['email' => [__($status), 'captcha' => 'The captcha is invalid.']]);
     }

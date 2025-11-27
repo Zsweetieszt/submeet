@@ -151,6 +151,25 @@
                     <i class="cil-speedometer nav-icon"></i> Dashboard</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ route('events') }}">
                     <i class="cil-calendar nav-icon"></i> Events</a></li>
+            <!-- <li class="nav-item"><a class="nav-link" href="{{ route('subscription') }}">
+                    <i class="cil-basket nav-icon"></i> Subscriptions</a></li> -->
+                    
+            <ul class="nav-group-items">
+            <li class="nav-item"><a class="nav-link" href="{{ route('subscription') }}">
+                    <i class="cil-basket nav-icon"></i> Subscriptions</a></li>
+
+            <!-- @php
+                $hasTransaction = \App\Models\UserSubscription::where('user_id', Auth::id())->exists();
+            @endphp
+
+            @if($hasTransaction)
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('subscription.history') }}">
+                        <span class="cil-basket nav-icon"></span> History & Bayar
+                    </a>
+                </li>
+            @endif -->
+        </ul>        
             @if (Auth::user()->root)
                 <li class="nav-item"><a class="nav-link" href="{{ route('users.index') }}">
                         <i class="cil-people nav-icon"></i> Users </a></li>

@@ -14,9 +14,6 @@ use App\Models\Paper;
 use App\Models\Topic;
 use App\Models\TopicPaper;
 use App\Services\EmailService;
-use App\Models\UserLogs; 
-use Illuminate\Support\Facades\Log; 
-use Auth;
 
 class PaperController extends Controller
 {
@@ -222,35 +219,6 @@ class PaperController extends Controller
             $path = $request->file('paper_file')->storeAs(config('path.paper') . $paper->event_id . '/' . $paper->paper_sub_id, $event . '_' . $paper->paper_sub_id . '_' . $paper->round . '.' . $request->paper_file->getClientOriginalExtension(), 'public');
             $paper->attach_file = ltrim($path, config('path.paper'));
             $paper->save();
-
-            // ==============================================================
-            // START LOGGING: Merekam aktivitas "Submit Paper"
-            // ==============================================================
-            $user = Auth::user();
-            if ($user) {
-                UserLogs::create([
-                    'user_id' => $user->user_id,
-                    'ip_address' => $request->getClientIp(),
-                    // Tipe log baru
-                    'user_log_type' => 'Submit Paper', 
-                    'user_agent' => json_encode(
-                        [
-                            'user_agent_raw' => $request->header('User-Agent'),
-                            'paper_info' => [
-                                'paper_sub_id' => $paper->paper_sub_id,
-                                'title' => $paper->title,
-                                'event_code' => $request->event,
-                                'file_name' => $request->file('paper_file')->getClientOriginalName(),
-                            ]
-                        ], 
-                        JSON_THROW_ON_ERROR
-                    ),
-                    'created_at' => now(),
-                ]);
-            }
-            // ==============================================================
-            // END LOGGING
-            // ==============================================================
 
             try {
                 TopicPaper::create([
@@ -830,32 +798,6 @@ class PaperController extends Controller
                 } catch (\Exception $e) {
                     \Log::error("Gagal mengirim email revisi ke reviewer ID {$assignment->reviewer_id}: " . str_replace(["\r", "\n"], ' ', $e->getMessage()));
                 }
-            }
-
-            try {
-                $user = Auth::user(); // Mendapatkan pengguna yang sedang login
-                if ($user) {
-                    UserLogs::create([
-                        'user_id' => $user->user_id,
-                        'ip_address' => $request->getClientIp(),
-                        'user_log_type' => 'Submit Revision', // <-- Nilai ENUM
-                        'user_agent' => json_encode([
-                            'user_agent_raw' => $request->header('User-Agent'),
-                            'paper_info' => [
-                                'new_paper_sub_id' => $paper->paper_sub_id,
-                                'first_paper_sub_id' => $paper->first_paper_sub_id,
-                                'title' => $paper->title,
-                                'event_code' => $request->event,
-                                'round' => $paper->round,
-                                'file_name' => $request->file('paper_file')->getClientOriginalName(),
-                            ]
-                        ], JSON_THROW_ON_ERROR),
-                        'created_at' => now(),
-                    ]);
-                }
-            } catch (\Exception $e) {
-                // Catat error jika logging gagal, tapi jangan hentikan proses utama
-                Log::error('Gagal mencatat log Submit Revision: ' . $e->getMessage());
             }
 
             return redirect()->route('index.paper', [$request->event])

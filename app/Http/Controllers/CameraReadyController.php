@@ -9,9 +9,6 @@ use App\Models\Author;
 use App\Models\CameraReadyPaper;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
-use App\Models\UserLogs;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class CameraReadyController extends Controller
 {
@@ -152,21 +149,6 @@ class CameraReadyController extends Controller
                     'created_by' => auth()->user()->user_id,
                     'updated_by' => auth()->user()->user_id,
                 ]);
-            }
-            try {
-                $user = Auth::user(); // Mendapatkan pengguna yang sedang login
-                if ($user) {
-                    UserLogs::create([
-                        'user_id' => $user->user_id,
-                        'ip_address' => $request->getClientIp(),
-                        'user_log_type' => 'Submit Camera-ready', // <-- Nilai ENUM
-                        'user_agent' => json_encode($request->header('User-Agent'), JSON_THROW_ON_ERROR),
-                        'created_at' => now(),
-                    ]);
-                }
-            } catch (\Exception $e) {
-                // Catat error jika logging gagal, tapi jangan hentikan proses utama
-                Log::error('Gagal mencatat log Submit Camera-ready: ' . $e->getMessage());
             }
 
             return redirect()->route('index.camera-ready', $event->event_code)->with('success', 'Camera Ready Paper uploaded successfully.');
