@@ -29,8 +29,8 @@
                 <form action="{{ route('upload.supporting-materials', [request()->route('event'), $papers->paper_sub_id]) }}"
                 method="POST" enctype="multipart/form-data">
                 @csrf
-
-                <input type="hidden" name="first_paper_sub_id" value="{{ $papers->first_paper_sub_id }}">
+                
+                <input type="hidden" name="first_paper_sub_id" value="{{ $papers->paper_sub_id }}">
                 <input type="hidden" name="event_id" value="{{ $event->event_id }}">
                 <input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
 
@@ -60,7 +60,7 @@
                 @error('presentation_tf_file')
                     <div class="text-danger mt-1">{{ $message }}</div>
                 @enderror
-
+                
                 <div class="mt-4">
                     <h5 class="my-1">Presentation Video</h5>
                     @if (optional($supporting)->poster_file)
@@ -76,7 +76,7 @@
                         <input type="url" id="videoLinkInput" name="video_link" class="form-control mb-2"
                             placeholder="Paste your video link here" oninput="handleVideoLinkInput(event)"
                             value="{{ $supporting ? $supporting->video_url : null }}">
-
+                            
                             <p id="fileChosenVideo" class="m-0" style="display: none;">
                                 Link Chosen :
                                 <a id="fileLinkVideo" href="#" target="_blank" style="display: none;">Video Link</a>
@@ -91,7 +91,7 @@
                 <div class="btn-wrapper mt-4 pt-4 border-top">
                     <button type="submit" class="btn btn-primary">Save</button>
                 </div>
-
+                
                 </form>
             </div>
         </div>
@@ -168,5 +168,5 @@
             }
         }
     </script>
-
+    
 @endsection

@@ -77,6 +77,8 @@ class CameraReadyController extends Controller
                 'cr_paper_file' => 'mimes:doc,docx|max:5120',
             ]);
 
+            // dd($request->all());
+
             if ($validator->fails()) {
                 return redirect()->back()->withErrors($validator);
             }

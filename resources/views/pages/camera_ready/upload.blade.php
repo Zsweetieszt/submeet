@@ -28,7 +28,7 @@
                 method="POST" enctype="multipart/form-data">
                 @csrf
 
-                <input type="hidden" name="first_paper_sub_id" value="{{ $papers->first_paper_sub_id }}">
+                <input type="hidden" name="first_paper_sub_id" value="{{ $papers->paper_sub_id }}">
                 <input type="hidden" name="event_id" value="{{ $event->event_id }}">
                 <input type="hidden" name="user_id" value="{{ auth()->user()->user_id }}">
 
@@ -160,5 +160,5 @@
             }
         }
     </script>
-
+    
 @endsection
